@@ -1,0 +1,36 @@
+# Environment Variables
+.env
+.env.local
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Hardhat
+cache/
+artifacts/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+
+# Build outputs
+/frontend/dist/
+/frontend/build/
+/smart-contract/dist/
+/smart-contract/build/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
