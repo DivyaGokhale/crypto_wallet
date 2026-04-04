@@ -6,9 +6,9 @@ module.exports = {
   networks: {
     sepolia: {
       //Sepolia RPC URL
-      url: "https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY",
+      url: "https://eth-sepolia.g.alchemy.com/v2/alchemy_key",
 
-      accounts: ["YOUR_WALLET_PRIVATE_KEY"]
+      accounts: ["private key"]
     }
   }
 };

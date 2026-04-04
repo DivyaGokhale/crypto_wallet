@@ -53,6 +53,7 @@ header h1 {
     font-weight: 700;
     background: linear-gradient(135deg, #3b82f6, #a855f7);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 8px;
 }
@@ -238,4 +239,42 @@ header p {
 
 .hash-link:hover {
     text-decoration: underline;
+}
+
+/* History Table Styles */
+.history-section {
+    margin-top: 24px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+#history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+#history-table th {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#history-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+}
+
+#history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-address {
+    font-family: monospace;
+    color: var(--primary-color);
 }

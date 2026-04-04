@@ -4,8 +4,9 @@ const CONTRACT_ADDRESS = "0xYourDeployedContractAddressHere";
 
 const CONTRACT_ABI = [
   "event Transfer(address indexed sender, address indexed receiver, uint amount, uint timestamp)",
-  "function addTransaction(address receiver, uint amount) public payable",
-  "function getTransactionCount() public view returns (uint256)"
+  "function sendTransaction(address receiver) public payable",
+  "function getTransactionCount() public view returns (uint256)",
+  "function getAllTransactions() public view returns (tuple(address sender, address receiver, uint256 amount, uint256 timestamp)[])"
 ];
 
 //Global State
@@ -28,6 +29,9 @@ const sendBtn = document.getElementById("send-btn");
 const statusContainer = document.getElementById("status-container");
 const statusMessage = document.getElementById("status-message");
 const txHashLink = document.getElementById("tx-hash-link");
+
+const historySection = document.getElementById("history-section");
+const historyBody = document.getElementById("history-body");
 
 
 /**
@@ -63,13 +67,23 @@ async function connectWallet() {
     connectBtn.classList.add("hidden");
     walletDetails.classList.remove("hidden");
     transactionSection.classList.remove("hidden");
+    historySection.classList.remove("hidden");
 
     // Fetch and display the ETH balance
     await updateBalance();
+    
+    // Fetch and display history
+    await updateHistory();
 
     // Set up listeners for account or network changes
     window.ethereum.on('accountsChanged', handleAccountsChanged);
     window.ethereum.on('chainChanged', () => window.location.reload());
+    
+    // Listen to Transfer events
+    contract.on("Transfer", (sender, receiver, amount, timestamp) => {
+      updateBalance();
+      updateHistory();
+    });
 
   } catch (error) {
     console.error("Error connecting to wallet:", error);
@@ -87,6 +101,7 @@ async function handleAccountsChanged(accounts) {
     connectBtn.classList.remove("hidden");
     walletDetails.classList.add("hidden");
     transactionSection.classList.add("hidden");
+    historySection.classList.add("hidden");
   } else {
     // Re-initialize with the newly selected account
     await connectWallet();
@@ -139,9 +154,9 @@ async function sendTransaction(event) {
     // Convert ETH amount to Wei
     const parsedAmount = ethers.parseEther(amountEth);
 
-    // Call the smart contract function `addTransaction`
+    // Call the smart contract function `sendTransaction`
     // We pass `{ value: parsedAmount }` so the ETH is actually transferred
-    const tx = await contract.addTransaction(receiverAddress, parsedAmount, {
+    const tx = await contract.sendTransaction(receiverAddress, {
       value: parsedAmount
     });
 
@@ -181,6 +196,43 @@ async function sendTransaction(event) {
     // Re-enable send button
     sendBtn.disabled = false;
     sendBtn.innerText = "Send Transaction";
+  }
+}
+
+/**
+ * Fetch and display transaction history
+ */
+async function updateHistory() {
+  if (!contract) return;
+  try {
+    const transactions = await contract.getAllTransactions();
+    historyBody.innerHTML = "";
+    
+    // Reverse to show newest first
+    const reversedTx = [...transactions].reverse();
+    
+    if (reversedTx.length === 0) {
+      historyBody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No transactions found</td></tr>";
+      return;
+    }
+    
+    reversedTx.forEach(tx => {
+      const sender = `${tx.sender.slice(0, 6)}...${tx.sender.slice(-4)}`;
+      const receiver = `${tx.receiver.slice(0, 6)}...${tx.receiver.slice(-4)}`;
+      const amountEth = parseFloat(ethers.formatEther(tx.amount)).toFixed(4);
+      const date = new Date(Number(tx.timestamp) * 1000).toLocaleString();
+      
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="history-address" title="${tx.sender}">${sender}</td>
+        <td class="history-address" title="${tx.receiver}">${receiver}</td>
+        <td>${amountEth}</td>
+        <td>${date}</td>
+      `;
+      historyBody.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Error fetching history:", error);
   }
 }
 
