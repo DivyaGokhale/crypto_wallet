@@ -1,28 +1,27 @@
-// --- Constants & Contract ABI ---
-
-const CONTRACT_ADDRESS = "0xYourDeployedContractAddressHere";
+const CONTRACT_ADDRESS = "0x79E673F0aA40C77bc2D115a8Ba0d6E67Fb08E322";
 
 const CONTRACT_ABI = [
   "event Transfer(address indexed sender, address indexed receiver, uint amount, uint timestamp)",
   "function sendTransaction(address receiver) public payable",
-  "function getTransactionCount() public view returns (uint256)",
   "function getAllTransactions() public view returns (tuple(address sender, address receiver, uint256 amount, uint256 timestamp)[])"
 ];
 
-//Global State
-let provider;
-let signer;
-let contract;
-let userAddress;
+let provider, signer, contract, userAddress;
 
-//DOM Elements
+// DOM
 const connectBtn = document.getElementById("connect-btn");
+const disconnectBtn = document.getElementById("disconnect-btn");
+const connectedUI = document.getElementById("connected-ui");
+
 const walletDetails = document.getElementById("wallet-details");
 const walletAddressElem = document.getElementById("wallet-address");
-const networkNameElem = document.getElementById("network-name");
 const walletBalanceElem = document.getElementById("wallet-balance");
+const networkNameElem = document.getElementById("network-name");
+const shortAddressElem = document.getElementById("short-address");
 
 const transactionSection = document.getElementById("transaction-section");
+const historySection = document.getElementById("history-section");
+
 const sendForm = document.getElementById("send-form");
 const sendBtn = document.getElementById("send-btn");
 
@@ -30,212 +29,122 @@ const statusContainer = document.getElementById("status-container");
 const statusMessage = document.getElementById("status-message");
 const txHashLink = document.getElementById("tx-hash-link");
 
-const historySection = document.getElementById("history-section");
 const historyBody = document.getElementById("history-body");
 
 
-/**
- * Initialize Web3 provider and connect to MetaMask
- */
+// CONNECT WALLET
 async function connectWallet() {
-  // Check if MetaMask or any window.ethereum provider is installed
-  if (typeof window.ethereum === "undefined") {
-    alert("Please install MetaMask to use this dApp!");
+  if (!window.ethereum) {
+    alert("Install MetaMask");
     return;
   }
 
-  try {
-    // Request account access from MetaMask
-    await window.ethereum.request({ method: "eth_requestAccounts" });
+  await window.ethereum.request({ method: "eth_requestAccounts" });
 
-    // Initialize ethers v6 BrowserProvider
-    provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
+  provider = new ethers.BrowserProvider(window.ethereum);
+  signer = await provider.getSigner();
+  userAddress = await signer.getAddress();
 
-    // Initialize Contract instance
-    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-    // Fetch network information
-    const network = await provider.getNetwork();
+  const network = await provider.getNetwork();
 
-    // Update the UI with connected state
-    walletAddressElem.innerText = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-    networkNameElem.innerText = network.name.charAt(0).toUpperCase() + network.name.slice(1);
+  const short = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
 
-    // Show connected UI elements
-    connectBtn.classList.add("hidden");
-    walletDetails.classList.remove("hidden");
-    transactionSection.classList.remove("hidden");
-    historySection.classList.remove("hidden");
+  walletAddressElem.innerText = short;
+  shortAddressElem.innerText = short;
+  networkNameElem.innerText = network.name;
 
-    // Fetch and display the ETH balance
-    await updateBalance();
-    
-    // Fetch and display history
-    await updateHistory();
+  connectBtn.classList.add("hidden");
+  connectedUI.classList.remove("hidden");
 
-    // Set up listeners for account or network changes
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', () => window.location.reload());
-    
-    // Listen to Transfer events
-    contract.on("Transfer", (sender, receiver, amount, timestamp) => {
-      updateBalance();
-      updateHistory();
-    });
+  walletDetails.classList.remove("hidden");
+  transactionSection.classList.remove("hidden");
+  historySection.classList.remove("hidden");
 
-  } catch (error) {
-    console.error("Error connecting to wallet:", error);
-    alert("Failed to connect wallet: " + error.message);
-  }
+  updateBalance();
+  updateHistory();
 }
 
-/**
- * Handle account switching within MetaMask
- */
-async function handleAccountsChanged(accounts) {
-  if (accounts.length === 0) {
-    console.log('Please connect to MetaMask.');
-    // Reset UI to disconnected state
-    connectBtn.classList.remove("hidden");
-    walletDetails.classList.add("hidden");
-    transactionSection.classList.add("hidden");
-    historySection.classList.add("hidden");
-  } else {
-    // Re-initialize with the newly selected account
-    await connectWallet();
-  }
-}
 
-/**
- * Fetch and display the ETH balance of the connected wallet
- */
+// DISCONNECT
+disconnectBtn.addEventListener("click", () => {
+  connectBtn.classList.remove("hidden");
+  connectedUI.classList.add("hidden");
+
+  walletDetails.classList.add("hidden");
+  transactionSection.classList.add("hidden");
+  historySection.classList.add("hidden");
+
+  walletAddressElem.innerText = "Not connected";
+  walletBalanceElem.innerText = "0.00";
+  networkNameElem.innerText = "Unknown";
+
+  userAddress = null;
+});
+
+
+// BALANCE
 async function updateBalance() {
-  if (!provider || !userAddress) return;
-
-  try {
-    const balanceWei = await provider.getBalance(userAddress);
-    const balanceEth = ethers.formatEther(balanceWei);
-    // Format to 4 decimal places for cleaner UI presentation
-    walletBalanceElem.innerText = parseFloat(balanceEth).toFixed(4);
-  } catch (error) {
-    console.error("Error fetching balance:", error);
-  }
+  const balance = await provider.getBalance(userAddress);
+  walletBalanceElem.innerText =
+    parseFloat(ethers.formatEther(balance)).toFixed(4);
 }
 
-/**
- * Handle Send Transaction Form Submission
- */
-async function sendTransaction(event) {
-  event.preventDefault();
 
-  const receiverAddress = document.getElementById("receiver").value.trim();
-  const amountEth = document.getElementById("amount").value.trim();
+// SEND TX
+sendForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  // Validate the receiver address format
-  if (!ethers.isAddress(receiverAddress)) {
-    alert("Invalid receiver address format. Please enter a valid Ethereum address.");
-    return;
-  }
+  const receiver = document.getElementById("receiver").value;
+  const amount = document.getElementById("amount").value;
 
   try {
-    // Disable button to prevent multiple submissions
     sendBtn.disabled = true;
-    sendBtn.innerText = "Processing...";
 
-    // Reveal and update status container (Pending)
     statusContainer.classList.remove("hidden");
-    statusMessage.className = "status pending";
-    statusMessage.innerText = "Transaction Pending... Please confirm in MetaMask.";
-    txHashLink.innerText = "Awaiting confirmation...";
-    txHashLink.removeAttribute("href");
+    statusMessage.innerText = "Pending...";
 
-    // Convert ETH amount to Wei
-    const parsedAmount = ethers.parseEther(amountEth);
-
-    // Call the smart contract function `sendTransaction`
-    // We pass `{ value: parsedAmount }` so the ETH is actually transferred
-    const tx = await contract.sendTransaction(receiverAddress, {
-      value: parsedAmount
+    const tx = await contract.sendTransaction(receiver, {
+      value: ethers.parseEther(amount)
     });
 
-    // Update UI with the transaction hash while it's mining
-    statusMessage.innerText = "Transaction Submitted. Waiting for block confirmation...";
-    txHashLink.innerText = `${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}`;
+    txHashLink.innerText = tx.hash.slice(0, 10) + "...";
+    txHashLink.href = `https://sepolia.etherscan.io/tx/${tx.hash}`;
 
-    // Set the block explorer URL (using Sepolia testnet)
-    const explorerUrl = `https://sepolia.etherscan.io/tx/${tx.hash}`;
-    txHashLink.setAttribute("href", explorerUrl);
+    await tx.wait();
 
-    // Wait for the transaction to be mined/confirmed
-    const receipt = await tx.wait();
+    statusMessage.innerText = "Success!";
+    updateBalance();
+    updateHistory();
 
-    // Update UI on a successful confirmation
-    statusMessage.className = "status confirmed";
-    statusMessage.innerText = "Transaction Confirmed Successfully!";
-
-    // Clear form inputs manually
-    document.getElementById("receiver").value = "";
-    document.getElementById("amount").value = "";
-
-    // Refresh balance after the ETH has been deducted and gas paid
-    await updateBalance();
-
-  } catch (error) {
-    console.error("Transaction execution failed:", error);
-    statusMessage.className = "status error";
-
-    // Parse rejection or other node errors
-    if (error.code === 'ACTION_REJECTED' || error.info?.error?.code === 4001) {
-      statusMessage.innerText = "Transaction rejected by user in MetaMask.";
-    } else {
-      statusMessage.innerText = "Transaction execution failed!";
-    }
-  } finally {
-    // Re-enable send button
-    sendBtn.disabled = false;
-    sendBtn.innerText = "Send Transaction";
+  } catch (err) {
+    statusMessage.innerText = "Failed!";
   }
-}
 
-/**
- * Fetch and display transaction history
- */
+  sendBtn.disabled = false;
+});
+
+
+// HISTORY
 async function updateHistory() {
-  if (!contract) return;
-  try {
-    const transactions = await contract.getAllTransactions();
-    historyBody.innerHTML = "";
-    
-    // Reverse to show newest first
-    const reversedTx = [...transactions].reverse();
-    
-    if (reversedTx.length === 0) {
-      historyBody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No transactions found</td></tr>";
-      return;
-    }
-    
-    reversedTx.forEach(tx => {
-      const sender = `${tx.sender.slice(0, 6)}...${tx.sender.slice(-4)}`;
-      const receiver = `${tx.receiver.slice(0, 6)}...${tx.receiver.slice(-4)}`;
-      const amountEth = parseFloat(ethers.formatEther(tx.amount)).toFixed(4);
-      const date = new Date(Number(tx.timestamp) * 1000).toLocaleString();
-      
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="history-address" title="${tx.sender}">${sender}</td>
-        <td class="history-address" title="${tx.receiver}">${receiver}</td>
-        <td>${amountEth}</td>
-        <td>${date}</td>
-      `;
-      historyBody.appendChild(row);
-    });
-  } catch (error) {
-    console.error("Error fetching history:", error);
-  }
+  const txs = await contract.getAllTransactions();
+  historyBody.innerHTML = "";
+
+  txs.reverse().forEach(tx => {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${tx.sender.slice(0,6)}...</td>
+      <td>${tx.receiver.slice(0,6)}...</td>
+      <td>${ethers.formatEther(tx.amount)}</td>
+      <td>${new Date(Number(tx.timestamp)*1000).toLocaleString()}</td>
+    `;
+
+    historyBody.appendChild(row);
+  });
 }
 
-//Event Listeners
+
+// EVENTS
 connectBtn.addEventListener("click", connectWallet);
-sendForm.addEventListener("submit", sendTransaction);

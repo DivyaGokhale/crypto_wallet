@@ -278,3 +278,149 @@ header p {
     font-family: monospace;
     color: var(--primary-color);
 }
+
+/* ========================= */
+/* HORIZONTAL LAYOUT FIX */
+/* ========================= */
+
+.top-section {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* Make cards side-by-side */
+.wallet-section,
+.transaction-section {
+    flex: 1;
+    min-width: 320px;
+    max-width: 480px;
+}
+
+/* Full width history */
+.full-width {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Override container width (important) */
+.container {
+    max-width: 1100px;
+}
+
+/* Responsive (mobile) */
+@media (max-width: 900px) {
+    .top-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .wallet-section,
+    .transaction-section {
+        max-width: 100%;
+    }
+}
+
+/* Make both cards equal height */
+.top-section {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: stretch; /* IMPORTANT */
+}
+
+/* Make cards fill full height */
+.wallet-section,
+.transaction-section {
+    flex: 1;
+    min-width: 320px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make inner content stretch */
+.wallet-info,
+#send-form {
+    /* flex: 1; */
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    height: 100%;
+}
+.wallet-info {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#wallet-details {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+}
+
+/* Wallet Actions */
+.wallet-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.connected-ui {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.address-badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.secondary-btn:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+/* Fix table layout */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* IMPORTANT */
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap; /* prevents merging text */
+}
+
+th {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Force proper column spacing */
+th:nth-child(1), td:nth-child(1) { width: 25%; }
+th:nth-child(2), td:nth-child(2) { width: 25%; }
+th:nth-child(3), td:nth-child(3) { width: 20%; }
+th:nth-child(4), td:nth-child(4) { width: 30%; }
