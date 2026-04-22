@@ -1,5 +1,4 @@
-// ─── CONTRACT CONFIG ────────────────────────────────────────────────────────
-const CONTRACT_ADDRESS = "0x756aCD31E2Bf0727652af18063FD1D00937E399a";
+const CONTRACT_ADDRESS = "";
 
 const CONTRACT_ABI = [
   "event Transfer(address indexed sender, address indexed receiver, uint amount, uint timestamp)",
@@ -7,12 +6,12 @@ const CONTRACT_ABI = [
   "function getAllTransactions() public view returns (tuple(address sender, address receiver, uint256 amount, uint256 timestamp)[])"
 ];
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// STATE 
 let provider, signer, contract, userAddress;
-let allTransactions = [];      // cache of raw on-chain txs
-let activeFilter = "all";      // "all" | "sent" | "received"
+let allTransactions = [];      
+let activeFilter = "all";     
 
-// ─── DOM REFS ────────────────────────────────────────────────────────────────
+// DOM REFS 
 const connectBtn      = document.getElementById("connect-btn");
 const disconnectBtn   = document.getElementById("disconnect-btn");
 const connectedUI     = document.getElementById("connected-ui");
@@ -61,9 +60,7 @@ const pickerList        = document.getElementById("picker-list");
 const filterTabs = document.querySelectorAll(".filter-tab");
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // WALLET: CONNECT
-// ═══════════════════════════════════════════════════════════════════════════
 async function connectWallet() {
   if (!window.ethereum) {
     alert("MetaMask is not installed. Please install it from metamask.io");
@@ -101,9 +98,7 @@ async function connectWallet() {
 }
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // WALLET: DISCONNECT
-// ═══════════════════════════════════════════════════════════════════════════
 disconnectBtn.addEventListener("click", () => {
   connectBtn.classList.remove("hidden");
   connectedUI.classList.add("hidden");
@@ -121,18 +116,14 @@ disconnectBtn.addEventListener("click", () => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // WALLET: BALANCE
-// ═══════════════════════════════════════════════════════════════════════════
 async function updateBalance() {
   const balance = await provider.getBalance(userAddress);
   walletBalElem.innerText = parseFloat(ethers.formatEther(balance)).toFixed(4);
 }
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // COPY ADDRESS
-// ═══════════════════════════════════════════════════════════════════════════
 copyAddrBtn.addEventListener("click", () => {
   if (!userAddress) return;
   navigator.clipboard.writeText(userAddress).then(() => {
@@ -143,9 +134,7 @@ copyAddrBtn.addEventListener("click", () => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // SEND TRANSACTION
-// ═══════════════════════════════════════════════════════════════════════════
 sendForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -197,9 +186,8 @@ function showStatus(msg, type) {
 }
 
 
-// ═══════════════════════════════════════════════════════════════════════════
+
 // TRANSACTION HISTORY  (with filter)
-// ═══════════════════════════════════════════════════════════════════════════
 async function updateHistory() {
   try {
     const txs = await contract.getAllTransactions();
@@ -277,9 +265,7 @@ filterTabs.forEach(tab => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // QR CODE  (receive ETH)
-// ═══════════════════════════════════════════════════════════════════════════
 qrBtn.addEventListener("click", () => {
   if (!userAddress) return;
 
@@ -309,9 +295,7 @@ qrCopyBtn.addEventListener("click", () => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // ADDRESS BOOK  (localStorage)
-// ═══════════════════════════════════════════════════════════════════════════
 const STORAGE_KEY = "cw_contacts";
 
 function getContacts() {
@@ -406,7 +390,7 @@ saveContactBtn.addEventListener("click", () => {
   cancelContactBtn.click();
 });
 
-// Pick contact (from send form)
+// Pick contact
 pickContactBtn.addEventListener("click", () => {
   const contacts = getContacts();
   if (!contacts.length) {
@@ -439,9 +423,7 @@ contactPickerModal.addEventListener("click", e => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════════════════
 // MetaMask account / chain change listeners
-// ═══════════════════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
   renderContacts(); // always load address book from localStorage
 
