@@ -12,23 +12,25 @@ A complete decentralized cryptocurrency wallet web application built with HTML, 
 ### 1. Smart Contract Development & Deployment
 
 1. Open a terminal and navigate to the `smart-contract` folder:
+   ``bash``
    cd Cryptocurrency-Wallet-and-Transaction-Application/smart-contract
+   ``bash``
 
-2. Initialize npm and install Hardhat and its dependencies:
+3. Initialize npm and install Hardhat and its dependencies:
    npm init -y
    npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
    
 
-3. Compile the smart contract:
+4. Compile the smart contract:
    npx hardhat compile
 
-4. Set up your environment variables:
+5. Set up your environment variables:
    Update `hardhat.config.js` with your Sepolia RPC URL (from Alchemy or Infura) and your MetaMask private key.
 
-5. Deploy the smart contract to the Sepolia testnet:
+6. Deploy the smart contract to the Sepolia testnet:
    npx hardhat run scripts/deploy.js --network sepolia
 
-6. **IMPORTANT:** After deployment, the terminal will output the deployed contract address. Copy this address and update the `CONTRACT_ADDRESS` variable at the top of `Cryptocurrency-Wallet-and-Transaction-Application/frontend/app.js`.
+7. **IMPORTANT:** After deployment, the terminal will output the deployed contract address. Copy this address and update the `CONTRACT_ADDRESS` variable at the top of `Cryptocurrency-Wallet-and-Transaction-Application/frontend/app.js`.
 
 ### 2. Frontend Setup
 
